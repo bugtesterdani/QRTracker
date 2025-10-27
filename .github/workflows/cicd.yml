@@ -69,19 +69,26 @@ jobs:
           output: semgrep-results.sarif
         continue-on-error: true
 
-      - name: Ensure Semgrep SARIF exists
+      - name: Check Semgrep SARIF
+        id: semgrep_sarif
         if: always()
         run: |
-          if [ ! -f semgrep-results.sarif ]; then
-            echo '{"version":"2.1.0","runs":[]}' > semgrep-results.sarif
+          if [ -s semgrep-results.sarif ]; then
+            echo "has_sarif=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_sarif=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload Semgrep SARIF
-        if: always()
+        if: steps.semgrep_sarif.outputs.has_sarif == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep-results.sarif
           category: semgrep
+
+      - name: Semgrep SARIF missing notice
+        if: steps.semgrep_sarif.outputs.has_sarif != 'true'
+        run: echo "Semgrep did not generate a SARIF file; skipping upload."
 
       - name: Fail on Semgrep findings
         if: steps.semgrep.outcome == 'failure'
