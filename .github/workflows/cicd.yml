@@ -154,8 +154,18 @@ jobs:
       - name: Vulnerability scan (dotnet list package)
         run: dotnet list src/QRTracker/QRTracker.csproj package --vulnerable --include-transitive
 
-      - name: Vulnerability audit (dotnet nuget audit)
-        run: dotnet nuget audit src/QRTracker/QRTracker.csproj --include-transitive --ignore-failed-sources
+      - name: Vulnerability report (JSON)
+        shell: pwsh
+        run: |
+          dotnet list src/QRTracker/QRTracker.csproj package --vulnerable --include-transitive --format json > vulnerability-report.json
+          Get-Content vulnerability-report.json
+
+      - name: Upload vulnerability report
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-report
+          path: vulnerability-report.json
+
 
       - name: Deprecated package scan
         run: dotnet list src/QRTracker/QRTracker.csproj package --deprecated

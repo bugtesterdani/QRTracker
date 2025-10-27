@@ -2,7 +2,7 @@ using QRTracker.Models;
 using QRTracker.Services;
 using QRTracker.Helpers;
 #if ANDROID || IOS || MACCATALYST
-using ZXing.Net.Maui.Controls;
+using ZXingCameraView = ZXing.Net.Maui.CameraBarcodeReaderView;
 #endif
 
 namespace QRTracker;
@@ -58,7 +58,7 @@ public partial class MainPage : ContentPage
 #if ANDROID || IOS || MACCATALYST
         try
         {
-            var cam = new CameraBarcodeReaderView
+            var cam = new ZXingCameraView
             {
                 IsDetecting = true,
                 HorizontalOptions = LayoutOptions.Fill,
