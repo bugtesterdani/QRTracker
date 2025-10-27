@@ -8,6 +8,7 @@ public partial class LoginPage : ContentPage
     private readonly AuthService _auth;
     private readonly SettingsService _settings;
     private readonly SharePointService _sp;
+    private bool _isProcessing;
 
     public LoginPage()
     {
@@ -26,16 +27,27 @@ public partial class LoginPage : ContentPage
 
     private async void OnLogin(object? sender, EventArgs e)
     {
+        if (_isProcessing)
+            return;
+
+        _isProcessing = true;
+        LoginActionButton.IsEnabled = false;
+
         var res = await _auth.InteractiveAsync();
         if (res.Success)
         {
             var s = await _settings.LoadAsync();
             _sp.Configure(s, res.AccessToken);
-            await DisplayAlert("OK", $"Angemeldet: {res.AccountUpn}", "OK");
+            await DisplayAlert("Erfolg", $"Angemeldet: {res.AccountUpn}", "OK");
         }
         else
         {
             await DisplayAlert("Fehler", res.Error ?? "Unbekannt", "OK");
         }
+
+        LoginActionButton.IsEnabled = true;
+        _isProcessing = false;
     }
+
+    protected override bool OnBackButtonPressed() => true;
 }

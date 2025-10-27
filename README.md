@@ -45,6 +45,7 @@ Diese Projektmappe enthält eine .NET MAUI-Anwendung, die auf Android, iOS und W
   - SharePoint/Excel-Ziel (SiteId, DriveId, ItemId, TableName) + Schalter `UseSharePoint`
 - Auth mittels MSAL:
   - Silent-Login beim Start (wenn aktiviert und Cache vorhanden)
+  - Automatischer Login-Dialog beim Start, sofern keine gültige Sitzung gefunden wird
   - Interaktiver Login-Button auf der Scan-Seite
 - Scan/Timer-Flow (Scan-Seite):
   - Station (S...) und Gerät (G...) eingeben oder mit Mobilscanner erfassen

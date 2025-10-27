@@ -5,25 +5,26 @@
              Title="Scannen">
     <Grid RowDefinitions="Auto,*,Auto" Padding="12">
         <VerticalStackLayout Grid.Row="0" Spacing="6">
-            <Label x:Name="AuthStatus"/>
+            <Label x:Name="AuthStatus" />
             <Button Text="Login" Clicked="OnLoginClicked" />
         </VerticalStackLayout>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Spacing="8">
                 <Label Text="Station (S...)" />
-                <Entry x:Name="StationEntry" Placeholder="Station QR oder Code" />
-                <Label Text="Gerät (G...)" />
-                <Entry x:Name="DeviceEntry" Placeholder="Geräte QR oder Code" />
-                <Button Text="Start" Clicked="OnStart" />
-                <Label x:Name="TimerLabel" FontSize="18" />
-                <Button Text="Stopp (erneut G scannen)" Clicked="OnStopManual" />
+                <Entry x:Name="StationEntry" Placeholder="Station QR oder Code" IsEnabled="False" />
+                <Label Text="Geraet (G...)" />
+                <Entry x:Name="DeviceEntry" Placeholder="Geraete QR oder Code" IsEnabled="False" />
+                <Button x:Name="StartButton" Text="Start" Clicked="OnStart" IsEnabled="False" />
+                <Label x:Name="TimerLabel" FontSize="18" Text="Laufzeit: -" />
+                <Button x:Name="StopButton" Text="Stopp (erneut G scannen)" Clicked="OnStopManual" IsEnabled="False" />
 
-                <Label Text="QR-Scanner (mobil)"/>
+                <Label Text="QR-Scanner (mobil)" />
                 <StackLayout x:Name="MobileScanHost" />
             </VerticalStackLayout>
         </ScrollView>
 
-        <Label Grid.Row="2" Text="Tipps: Station S..., Gerät G...; G erneut zum Stop."/> 
+        <Label Grid.Row="2" Text="Tipps: Station S..., Geraet G...; G erneut zum Stop." />
     </Grid>
 </ContentPage>
+

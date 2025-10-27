@@ -2,10 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="QRTracker.Pages.LoginPage"
-             Title="Login">
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Zum Anmelden die Schaltfläche drücken." />
-        <Button Text="Login" Clicked="OnLogin" />
+             Title="Anmeldung">
+    <VerticalStackLayout Padding="20" Spacing="20">
+        <Label Text="Bitte melden Sie sich mit Ihrem Microsoft-Konto an, um weiterzumachen." />
+        <Button x:Name="LoginActionButton" Text="Jetzt anmelden" Clicked="OnLogin" />
     </VerticalStackLayout>
 </ContentPage>
-

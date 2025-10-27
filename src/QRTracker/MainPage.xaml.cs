@@ -1,8 +1,9 @@
 using QRTracker.Models;
+using QRTracker.Pages;
 using QRTracker.Services;
 using QRTracker.Helpers;
 #if ANDROID || IOS || MACCATALYST
-using ZXingCameraView = ZXing.Net.Maui.CameraBarcodeReaderView;
+using ZXing.Net.Maui.Controls;
 #endif
 
 namespace QRTracker;
@@ -20,6 +21,8 @@ public partial class MainPage : ContentPage
     private string? _device;
     private IDispatcherTimer? _timer;
     private string? _accessToken;
+    private bool _isLoginModalOpen;
+    private Page? _loginModalPage;
 
     public MainPage()
     {
@@ -28,6 +31,8 @@ public partial class MainPage : ContentPage
         _authService = ServiceHelper.GetRequiredService<AuthService>();
         _localData = ServiceHelper.GetRequiredService<LocalDataService>();
         _spService = ServiceHelper.GetRequiredService<SharePointService>();
+        _authService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        ApplyAuthState(false);
         _ = InitAsync();
     }
 
@@ -43,22 +48,26 @@ public partial class MainPage : ContentPage
             {
                 _accessToken = silent.AccessToken;
                 _spService.Configure(_settings, _accessToken);
-                AuthStatus.Text = $"Angemeldet: {silent.AccountUpn}";
-            }
-            else
-            {
-                AuthStatus.Text = "Nicht angemeldet";
             }
         }
-        else
+
+        if (!_authService.IsAuthenticated)
         {
-            AuthStatus.Text = "Login optional";
+            AuthStatus.Text = "Anmeldung erforderlich";
+            await ShowLoginModalAsync();
         }
 
 #if ANDROID || IOS || MACCATALYST
+        InitializeCameraScanner();
+#endif
+    }
+
+    private void InitializeCameraScanner()
+    {
         try
         {
-            var cam = new ZXingCameraView
+#if ANDROID || IOS || MACCATALYST
+            var cam = new CameraBarcodeReaderView
             {
                 IsDetecting = true,
                 HorizontalOptions = LayoutOptions.Fill,
@@ -67,41 +76,38 @@ public partial class MainPage : ContentPage
             cam.BarcodesDetected += OnBarcodeDetected;
             MobileScanHost.Children.Clear();
             MobileScanHost.Children.Add(cam);
+#endif
         }
         catch
         {
-            // ignore scanner issues on platforms without camera
+            // ignore scanner issues on platforms without camera or permissions
         }
-#endif
     }
 
     private async void OnLoginClicked(object? sender, EventArgs e)
     {
-        var res = await _authService.InteractiveAsync();
-        if (res.Success)
-        {
-            _accessToken = res.AccessToken;
-            _spService.Configure(_settings, _accessToken);
-            AuthStatus.Text = $"Angemeldet: {res.AccountUpn}";
-        }
-        else
-        {
-            await DisplayAlert("Login fehlgeschlagen", res.Error ?? "Unbekannter Fehler", "OK");
-        }
+        await ShowLoginModalAsync();
     }
 
-    private void OnStart(object? sender, EventArgs e)
+    private async void OnStart(object? sender, EventArgs e)
     {
+        if (!_authService.IsAuthenticated)
+        {
+            await DisplayAlert("Login erforderlich", "Bitte melden Sie sich zuerst an.", "OK");
+            await ShowLoginModalAsync();
+            return;
+        }
+
         var s = StationEntry.Text?.Trim();
         var g = DeviceEntry.Text?.Trim();
         if (string.IsNullOrWhiteSpace(s) || !s.StartsWith('S'))
         {
-            DisplayAlert("Fehler", "Station-Code muss mit S beginnen.", "OK");
+            await DisplayAlert("Fehler", "Station-Code muss mit S beginnen.", "OK");
             return;
         }
         if (string.IsNullOrWhiteSpace(g) || !g.StartsWith('G'))
         {
-            DisplayAlert("Fehler", "Geräte-Code muss mit G beginnen.", "OK");
+            await DisplayAlert("Fehler", "Geraete-Code muss mit G beginnen.", "OK");
             return;
         }
         _station = s;
@@ -118,6 +124,11 @@ public partial class MainPage : ContentPage
 
     private async void OnStopManual(object? sender, EventArgs e)
     {
+        if (!_authService.IsAuthenticated)
+        {
+            await ShowLoginModalAsync();
+            return;
+        }
         await CompleteAsync();
     }
 
@@ -199,4 +210,96 @@ public partial class MainPage : ContentPage
         DeviceEntry.Text = string.Empty;
         UpdateTimer();
     }
+
+    private async void OnAuthenticationStateChanged(object? sender, AuthStateChangedEventArgs e)
+    {
+        await RunOnUiThreadAsync(async () =>
+        {
+            if (e.IsAuthenticated)
+            {
+                _accessToken = e.AccessToken;
+                AuthStatus.Text = string.IsNullOrWhiteSpace(e.AccountUpn) ? "Angemeldet" : $"Angemeldet: {e.AccountUpn}";
+                _spService.Configure(_settings, _accessToken);
+                ApplyAuthState(true);
+                await CloseLoginModalAsync();
+            }
+            else
+            {
+                _accessToken = null;
+                AuthStatus.Text = "Anmeldung erforderlich";
+                ApplyAuthState(false);
+                await ShowLoginModalAsync();
+            }
+        });
+    }
+
+    private void ApplyAuthState(bool isAuthenticated)
+    {
+        StationEntry.IsEnabled = isAuthenticated;
+        DeviceEntry.IsEnabled = isAuthenticated;
+        StartButton.IsEnabled = isAuthenticated;
+        StopButton.IsEnabled = isAuthenticated;
+
+        if (!isAuthenticated)
+        {
+            _timer?.Stop();
+            _timer = null;
+            _startUtc = null;
+            _station = null;
+            _device = null;
+            TimerLabel.Text = "Laufzeit: -";
+            StationEntry.Text = string.Empty;
+            DeviceEntry.Text = string.Empty;
+        }
+    }
+
+    private ValueTask RunOnUiThreadAsync(Func<Task> action)
+    {
+        if (Dispatcher.IsDispatchRequired)
+        {
+            return new ValueTask(Dispatcher.DispatchAsync(action));
+        }
+
+        return new ValueTask(action());
+    }
+
+    private async Task ShowLoginModalAsync()
+    {
+        if (_authService.IsAuthenticated)
+            return;
+
+        if (_isLoginModalOpen)
+            return;
+
+        await RunOnUiThreadAsync(async () =>
+        {
+            if (_isLoginModalOpen)
+                return;
+
+            _isLoginModalOpen = true;
+            _loginModalPage = new LoginPage();
+            await Navigation.PushModalAsync(_loginModalPage);
+        });
+    }
+
+    private async Task CloseLoginModalAsync()
+    {
+        if (!_isLoginModalOpen)
+            return;
+
+        await RunOnUiThreadAsync(async () =>
+        {
+            if (Navigation.ModalStack.Count > 0)
+            {
+                await Navigation.PopModalAsync();
+            }
+            _loginModalPage = null;
+            _isLoginModalOpen = false;
+        });
+    }
 }
+
+
+
+
+
