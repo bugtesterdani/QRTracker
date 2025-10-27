@@ -19,6 +19,7 @@ public partial class SettingsPage : ContentPage
     private async Task LoadAsync()
     {
         _settings = await _settingsService.LoadAsync();
+        EmailEntry.Text = _settings.UserEmail;
         TenantEntry.Text = _settings.TenantId;
         ClientEntry.Text = _settings.ClientId;
         UserHintEntry.Text = _settings.PreferredUserHint;
@@ -32,6 +33,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnSaveClicked(object? sender, EventArgs e)
     {
+        _settings.UserEmail = EmailEntry.Text?.Trim() ?? string.Empty;
         _settings.TenantId = TenantEntry.Text?.Trim();
         _settings.ClientId = ClientEntry.Text?.Trim();
         _settings.PreferredUserHint = UserHintEntry.Text?.Trim();

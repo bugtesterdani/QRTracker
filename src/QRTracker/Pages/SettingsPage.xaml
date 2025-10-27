@@ -6,6 +6,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="12" Padding="16">
             <Label Text="Azure AD / MSAL" FontAttributes="Bold" />
+            <Entry x:Name="EmailEntry" Placeholder="Benutzer E-Mail (z.B. name@firma.de)" Keyboard="Email" />
             <Entry x:Name="TenantEntry" Placeholder="Tenant ID" />
             <Entry x:Name="ClientEntry" Placeholder="Client ID (App-Registration)" />
             <Entry x:Name="UserHintEntry" Placeholder="Benutzer (UPN) Hint optional" />
@@ -26,4 +27,3 @@
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
-

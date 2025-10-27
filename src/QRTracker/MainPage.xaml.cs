@@ -24,17 +24,27 @@ public partial class MainPage : ContentPage
     private bool _isLoginModalOpen;
     private Page? _loginModalPage;
 
-    public MainPage()
-    {
-        InitializeComponent();
-        _settingsService = ServiceHelper.GetRequiredService<SettingsService>();
-        _authService = ServiceHelper.GetRequiredService<AuthService>();
-        _localData = ServiceHelper.GetRequiredService<LocalDataService>();
-        _spService = ServiceHelper.GetRequiredService<SharePointService>();
-        _authService.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        ApplyAuthState(false);
-        _ = InitAsync();
-    }
+	public MainPage()
+	{
+		InitializeComponent();
+		_settingsService = ServiceHelper.GetRequiredService<SettingsService>();
+		_authService = ServiceHelper.GetRequiredService<AuthService>();
+		_localData = ServiceHelper.GetRequiredService<LocalDataService>();
+		_spService = ServiceHelper.GetRequiredService<SharePointService>();
+		_authService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+		ApplyAuthState(false);
+		_ = InitAsync();
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+
+		if (!_authService.IsAuthenticated)
+		{
+			await ShowLoginModalAsync();
+		}
+	}
 
     private async Task InitAsync()
     {
@@ -51,11 +61,10 @@ public partial class MainPage : ContentPage
             }
         }
 
-        if (!_authService.IsAuthenticated)
-        {
-            AuthStatus.Text = "Anmeldung erforderlich";
-            await ShowLoginModalAsync();
-        }
+		if (!_authService.IsAuthenticated)
+		{
+			AuthStatus.Text = "Anmeldung erforderlich";
+		}
 
 #if ANDROID || IOS || MACCATALYST
         InitializeCameraScanner();
@@ -201,7 +210,7 @@ public partial class MainPage : ContentPage
             catch { }
         }
 
-        await DisplayAlert("Erfasst", uploaded ? "Lokal gespeichert und hochgeladen." : "Lokal gespeichert (Upload später möglich).", "OK");
+        await DisplayAlert("Erfasst", uploaded ? "Lokal gespeichert und hochgeladen." : "Lokal gespeichert (Upload spaeter möglich).", "OK");
 
         _startUtc = null;
         _station = null;
@@ -253,51 +262,66 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private ValueTask RunOnUiThreadAsync(Func<Task> action)
-    {
-        if (Dispatcher.IsDispatchRequired)
-        {
-            return new ValueTask(Dispatcher.DispatchAsync(action));
-        }
+	private async Task RunOnUiThreadAsync(Func<Task> action)
+	{
+		if (Dispatcher.IsDispatchRequired)
+		{
+			await Dispatcher.DispatchAsync(action);
+		}
+		else
+		{
+			await action();
+		}
+	}
 
-        return new ValueTask(action());
-    }
+	private async Task ShowLoginModalAsync()
+	{
+		if (_authService.IsAuthenticated)
+			return;
 
-    private async Task ShowLoginModalAsync()
-    {
-        if (_authService.IsAuthenticated)
-            return;
+		if (_isLoginModalOpen)
+			return;
 
-        if (_isLoginModalOpen)
-            return;
+		await RunOnUiThreadAsync(async () =>
+		{
+			if (_isLoginModalOpen)
+				return;
 
-        await RunOnUiThreadAsync(async () =>
-        {
-            if (_isLoginModalOpen)
-                return;
+			_isLoginModalOpen = true;
+			_loginModalPage = new LoginPage(NavigateToSettingsAsync);
+			await Navigation.PushModalAsync(_loginModalPage);
+		});
+	}
 
-            _isLoginModalOpen = true;
-            _loginModalPage = new LoginPage();
-            await Navigation.PushModalAsync(_loginModalPage);
-        });
-    }
+	private async Task CloseLoginModalAsync()
+	{
+		if (!_isLoginModalOpen)
+			return;
 
-    private async Task CloseLoginModalAsync()
-    {
-        if (!_isLoginModalOpen)
-            return;
+		await RunOnUiThreadAsync(async () =>
+		{
+			if (Navigation.ModalStack.Count > 0)
+			{
+				await Navigation.PopModalAsync();
+			}
+			_loginModalPage = null;
+			_isLoginModalOpen = false;
+		});
+	}
 
-        await RunOnUiThreadAsync(async () =>
-        {
-            if (Navigation.ModalStack.Count > 0)
-            {
-                await Navigation.PopModalAsync();
-            }
-            _loginModalPage = null;
-            _isLoginModalOpen = false;
-        });
-    }
+	private async Task NavigateToSettingsAsync()
+	{
+		await CloseLoginModalAsync();
+		if (Shell.Current is not null)
+		{
+			await Shell.Current.GoToAsync("//SettingsPage");
+		}
+	}
 }
+
+
+
+
 
 
 

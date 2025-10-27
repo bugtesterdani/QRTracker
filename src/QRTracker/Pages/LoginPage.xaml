@@ -4,7 +4,8 @@
              x:Class="QRTracker.Pages.LoginPage"
              Title="Anmeldung">
     <VerticalStackLayout Padding="20" Spacing="20">
-        <Label Text="Bitte melden Sie sich mit Ihrem Microsoft-Konto an, um weiterzumachen." />
+        <Label Text="Bitte geben Sie Ihre Firmen-E-Mail-Adresse ein und melden Sie sich anschließend an." />
+        <Entry x:Name="EmailEntry" Placeholder="name@firma.de" Keyboard="Email" />
         <Button x:Name="LoginActionButton" Text="Jetzt anmelden" Clicked="OnLogin" />
     </VerticalStackLayout>
 </ContentPage>

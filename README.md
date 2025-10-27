@@ -2,90 +2,85 @@
 
 Cross-platform .NET MAUI App (Android, iOS, Windows)
 
-Diese Projektmappe enthält eine .NET MAUI-Anwendung, die auf Android, iOS und Windows läuft. Voraussetzung ist eine korrekt eingerichtete .NET/MAUI-Umgebung.
-
 ## Voraussetzungen
 
 - .NET SDK 9 (oder kompatibel)
-- MAUI-Workloads installiert: `dotnet workload list` sollte `android`, `ios`, `maccatalyst`, `maui-windows` anzeigen.
-  - Falls nötig: `dotnet workload install maui`
-- Windows: Visual Studio 2022 17.13+ mit „.NET Multi-platform App UI development“
-- Android: Android SDK/Emulator oder ein angeschlossenes Gerät
-- iOS: Mac-Buildhost/Xcode für Build & Deploy (Remote-Build von Windows aus möglich)
+- Installierte MAUI-Workloads (android, ios, maccatalyst, maui-windows)
+- Windows: Visual Studio 2022 17.13+ mit MAUI-Workload
+- Android: SDK, Emulator oder angeschlossenes Device
+- iOS: Mac-Buildhost/Xcode oder Remote-Build
 
-## Struktur
+## Projektstruktur
 
 - Solution: `QRTracker.sln`
-- Projekt: `src/QRTracker/QRTracker.csproj`
+- Hauptprojekt: `src/QRTracker/QRTracker.csproj`
 
 ## Bauen & Starten
 
-- Windows (WinUI):
+- Windows (WinUI)
   - Build: `dotnet build src/QRTracker/QRTracker.csproj -c Debug -f net9.0-windows10.0.19041.0`
-  - Starten: `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-windows10.0.19041.0`
+  - Start: `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-windows10.0.19041.0`
+- Android: `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-android`
+- iOS: `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-ios`
 
-- Android:
-  - Emulator/Device starten/verbinden
-  - Starten: `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-android`
+## Kernfunktionen
 
-- iOS:
-  - Erfordert Mac-Buildhost und Provisioning
-  - Build: `dotnet build src/QRTracker/QRTracker.csproj -c Debug -f net9.0-ios`
-  - Starten (mit angegebener Ziel-Geräte-ID, z.B. Simulator): `dotnet build src/QRTracker/QRTracker.csproj -t:Run -f net9.0-ios`
+- **Einstellungen** (`settings.json` im AppData-Verzeichnis)
+  - Firmen-E-Mail, TenantId, ClientId, optional User Hint
+  - SharePoint/Excel Ziel (SiteId, DriveId, ItemId, TableName)
+- **Authentifizierung (MSAL)**
+  - Silent-Sign-In beim Start (falls Cache vorhanden)
+  - Automatischer Login-Dialog beim Start ohne aktive Sitzung
+  - Nutzer melden sich mit ihrer Firmen-E-Mail an; Tenant-/Client-ID werden anhand der Domain vorbelegt
+  - Interaktiver Login-Button bleibt vorhanden
+- **Scan/Timer-Flow**
+  - Station (S...) und Geraet (G...) eingeben oder via mobilem QR-Scanner erfassen
+  - Timer startet bei Scan, endet bei erneutem G-Scan oder Stop-Button
+  - Aktivitaet (W/R/P/S) + Notiz abfragen
+  - Lokale Historie (`history.json`) und optionaler Graph-Upload
+- **Historie**: Liste aller Sessions inkl. Tages-/Wochen-/Monats-/Gesamtsumme
 
-## Hinweise
+### Tenant-/E-Mail-Zuordnung
 
-- Die Standardvorlage zeigt eine einfache Startseite. 
-- Paketbezeichner, App-Name/Icons und Berechtigungen können pro Plattform in `Platforms/*` und in `*.csproj` angepasst werden.
-
-## Implementierte Funktionen (QRTracker)
-
-- Einstellungen: `Einstellungen`-Tab. Speichert `settings.json` in `AppDataDirectory`.
-  - Azure AD (TenantId, ClientId, optional UPN-Hint)
-  - SharePoint/Excel-Ziel (SiteId, DriveId, ItemId, TableName) + Schalter `UseSharePoint`
-- Auth mittels MSAL:
-  - Silent-Login beim Start (wenn aktiviert und Cache vorhanden)
-  - Automatischer Login-Dialog beim Start, sofern keine gültige Sitzung gefunden wird
-  - Interaktiver Login-Button auf der Scan-Seite
-- Scan/Timer-Flow (Scan-Seite):
-  - Station (S...) und Gerät (G...) eingeben oder mit Mobilscanner erfassen
-  - Start: Timer läuft; Stop: erneutes Scannen von G oder Button "Stopp"
-  - Abfrage Tätigkeit: W/R/P/S und optionale Notiz
-  - Speicherung lokal (`history.json`), optional Upload als Excel-Zeile via Graph
-- Historie-Ansicht: Liste und Summen pro Tag/Woche/Monat/Gesamt
+- Zuordnungstabelle in `src/QRTracker/Services/TenantConfigProvider.cs`
+- Beispiel `example.com` durch echte Firmen-Domains plus TenantId/ClientId/SiteId/DriveId/ItemId/TableName ersetzen
+- Nutzer geben nur ihre Firmenadresse ein; notwendige Einstellungen werden gef�llt
+- Falls keine Zuordnung existiert, �ffnet die App automatisch den Einstellungs-Tab zur manuellen Eingabe
 
 ### SharePoint/Excel Upload (Graph)
 
-- Erforderliche Berechtigungen (Scopes): `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `offline_access`.
-- App-Registrierung in Entra ID (Azure AD):
-  - `ClientId` notieren
-  - Plattform-Redirect URIs setzen:
-    - Android/iOS: `msal{ClientId}://auth`
-    - Windows: Systembrowser genügt (kein spezielles Redirect notwendig)
-  - Delegierte Berechtigungen für Microsoft Graph hinzufügen (oder App-Zugriff nach Bedarf)
-- Einstellungen befüllen:
-  - `SiteId`, `DriveId`, `ItemId` (Excel-Datei), `TableName` (z.B. `Table1`).
-  - Hinweis: Die Tabelle in der Arbeitsmappe muss existieren.
+- Standard-Scopes: `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `offline_access`
+- App-Registrierung in Entra ID (Azure AD) notwendig
+  - Redirect URIs konfigurieren (`msal{ClientId}://auth` auf Mobile, Systembrowser auf Windows)
+  - Delegierte Graph-Berechtigungen hinzuf�gen
+- Tabelle/Datei muss existieren (TableName default `Table1`)
 
 ### QR-Scanner auf Mobile
 
-- Paket: `ZXing.Net.MAUI` ist referenziert. Der Scanner wird zur Laufzeit auf Android/iOS initialisiert.
-- iOS: `NSCameraUsageDescription` ist hinterlegt.
-- Windows: Kein integrierter Scanner; Codes können manuell eingegeben werden.
+- Paket: `ZXing.Net.MAUI` + `ZXing.Net.MAUI.Controls`
+- Android/iOS: Kamera-Scanner im UI eingebettet
+- Windows: Codes manuell erfassen (kein Kamera-Scanner)
 
-## CI/CD
+## CI/CD (GitHub Actions)
 
-- GitHub Actions Workflow: `.github/workflows/cicd.yml`
-- Läuft auf Push nach `main`, auf Tags `v*` und manuell via `workflow_dispatch`.
-- Sicherheits- und Lizenzprüfungen
-  - `dotnet list package` (vulnerable/deprecated, JSON-Report als Artefakt)
-  - Trivy Filesystem-Scan (CRITICAL/HIGH, Sarif → Code Scanning)
-  - Semgrep SAST (`p/ci` Regelset, Sarif → Code Scanning)
-  - CodeQL für C# (Security Events)
-  - GitHub Dependency Review (nur Pull Requests)
-  - Lizenzprüfung mit Abbruch bei `GPL/AGPL/LGPL/UNKNOWN`
-  - Secret-Scan via `gitleaks`
+- Workflow: `.github/workflows/cicd.yml`
+- Trigger: Push auf `main`, Tags `v*`, Pull-Requests, manuell
+- Checks
+  - `dotnet list package` (vulnerable/deprecated) inkl. JSON-Report als Artefakt
+  - Trivy (CRITICAL/HIGH) + Semgrep (SAST) + CodeQL + Dependency Review
+  - Gitleaks & Lizenzpruefung (Fehler bei GPL/UNKNOWN)
 - Build & Release
-  - Release-Build (`dotnet publish`, self-contained, Single-File)
-  - Artefakt `QRTracker.exe` wird hochgeladen
-  - Bei Tags (`v*`) entsteht automatisch ein Release mit dem umbenannten Binary
+  - Self-contained Publish, Upload des `.exe`
+  - Automatisches GitHub-Release bei Tags `v*`
+
+## Konfiguration in Kurzform
+
+1. E-Mail-Domain zu Tenant/Client/SharePoint-Ziel in `TenantConfigProvider` hinterlegen
+2. App-Registrierung in Entra ID anlegen (Public Client) und Werte eintragen
+3. Nutzer starten App, geben Firmen-E-Mail ein und melden sich an
+4. Optional: SharePoint IDs im Mapping pflegen (SiteId, DriveId, ItemId, TableName)
+
+## Bekannte Hinweise
+
+- XAML-Compiler warnt fuer Historien-View (fehlendes `x:DataType`); funktional unkritisch
+- Bei fehlender Domain-Zuordnung wird der Tab "Einstellungen" geoeffnet, damit Werte manuell erg�nzt werden k�nnen

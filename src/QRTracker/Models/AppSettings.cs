@@ -4,6 +4,7 @@ public class AppSettings
 {
     public string? TenantId { get; set; }
     public string? ClientId { get; set; }
+    public string UserEmail { get; set; } = string.Empty;
     public string[] Scopes { get; set; } = new[] { "Files.ReadWrite.All", "Sites.ReadWrite.All", "offline_access" };
 
     // SharePoint/Excel targets
@@ -19,4 +20,3 @@ public class AppSettings
     // Misc
     public string? PreferredUserHint { get; set; }
 }
-
