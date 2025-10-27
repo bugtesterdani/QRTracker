@@ -100,6 +100,9 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Install required workloads
+        run: dotnet workload restore QRTracker.sln
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
@@ -127,6 +130,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+
+      - name: Install required workloads
+        run: dotnet workload restore QRTracker.sln
 
       - name: Restore
         run: dotnet restore QRTracker.sln
