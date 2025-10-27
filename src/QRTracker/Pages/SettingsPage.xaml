@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QRTracker.Pages.SettingsPage"
+             Title="Einstellungen">
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="16">
+            <Label Text="Azure AD / MSAL" FontAttributes="Bold" />
+            <Entry x:Name="TenantEntry" Placeholder="Tenant ID" />
+            <Entry x:Name="ClientEntry" Placeholder="Client ID (App-Registration)" />
+            <Entry x:Name="UserHintEntry" Placeholder="Benutzer (UPN) Hint optional" />
+            <Switch x:Name="SilentSwitch" />
+            <Label Text="Silent SSO beim Start versuchen" />
+
+            <BoxView HeightRequest="1" BackgroundColor="Gray" Opacity="0.3" />
+
+            <Label Text="SharePoint / Excel Ziel (Graph)" FontAttributes="Bold" />
+            <Switch x:Name="UseSharePointSwitch" />
+            <Label Text="SharePoint-Upload aktivieren" />
+            <Entry x:Name="SiteIdEntry" Placeholder="Site ID" />
+            <Entry x:Name="DriveIdEntry" Placeholder="Drive ID" />
+            <Entry x:Name="ItemIdEntry" Placeholder="Excel Item ID" />
+            <Entry x:Name="TableNameEntry" Placeholder="Excel Tabellename (z.B. Table1)" />
+
+            <Button Text="Speichern" Clicked="OnSaveClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+

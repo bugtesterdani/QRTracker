@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QRTracker.Pages.HistoryPage"
+             Title="Historie">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="12">
+        <VerticalStackLayout Grid.Row="0">
+            <Label x:Name="TotalsLabel" FontAttributes="Bold" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="2" x:Name="HistoryList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="0,6">
+                        <Label Text="{Binding StartUtc, StringFormat='Start: {0:G} UTC'}" />
+                        <Label Text="{Binding Duration}" />
+                        <Label Text="{Binding StationCode}" />
+                        <Label Text="{Binding DeviceCode}" />
+                        <Label Text="{Binding ActionCode}" />
+                        <Label Text="{Binding Note}" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button Grid.Row="3" Text="Neu laden" Clicked="OnReload" />
+    </Grid>
+</ContentPage>
+

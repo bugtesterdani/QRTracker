@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore QRTracker.sln
+
+      - name: Vulnerability scan (dotnet list package)
+        run: dotnet list src/QRTracker/QRTracker.csproj package --vulnerable --include-transitive
+
+      - name: Deprecated package scan
+        run: dotnet list src/QRTracker/QRTracker.csproj package --deprecated
+
+      - name: License compliance check
+        shell: pwsh
+        run: |
+          dotnet list src/QRTracker/QRTracker.csproj package --include-transitive --license > licenses.txt
+          Get-Content licenses.txt
+          if (Select-String -Path licenses.txt -Pattern 'AGPL|GPL|LGPL|UNKNOWN|UNLICENSED') {
+            Write-Error 'Disallowed or unknown licenses detected.'
+            exit 1
+          }
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.txt
+
+      - name: Install Gitleaks
+        shell: pwsh
+        run: choco install gitleaks --no-progress -y
+
+      - name: Credential leak scan (gitleaks)
+        shell: pwsh
+        run: |
+          $env:PATH += ';C:\ProgramData\chocolatey\bin'
+          gitleaks detect --source "${{ github.workspace }}" --no-banner --redact
+
+      - name: Build (Release)
+        run: dotnet build src/QRTracker/QRTracker.csproj -c Release
+
+      - name: Publish self-contained executable
+        shell: pwsh
+        run: |
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'artifacts/win-x64'
+          New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
+          dotnet publish src/QRTracker/QRTracker.csproj -c Release -f net9.0-windows10.0.19041.0 -r win10-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:EnableCompressionInSingleFile=true -o $publishDir
+          Get-ChildItem $publishDir
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QRTracker-win-x64
+          path: artifacts/win-x64/*.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: QRTracker-win-x64
+          path: dist
+
+      - name: Rename binary with tag
+        run: |
+          mv dist/QRTracker.exe dist/QRTracker-${{ github.ref_name }}.exe
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/QRTracker-${{ github.ref_name }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

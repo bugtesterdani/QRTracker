@@ -1,0 +1,67 @@
+# Build outputs
+bin/
+obj/
+**/bin/
+**/obj/
+artifacts/
+publish/
+AppPackages/
+App_Build/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Xamarin/Mobile
+*.apk
+*.aab
+*.ap_ 
+*.ipa
+*.dSYM/
+*.xcworkspace/
+*.xcuserstate
+*.xcuserdata/
+*.xcodeproj/project.xcworkspace/
+
+# Installer bundles
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.appinstaller
+
+# Logs & caches
+*.log
+*.tlog
+*.pidb
+*.sdf
+*.dbmdl
+*.cache
+*.swp
+*.bak
+
+# Generated
+*.pdb
+*.nupkg
+TestResults/
+CoverageOutput/
+
+# OS specifics
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# NuGet
+packages/
+.nuget/
+
+# Tooling
+.idea/
+*.code-workspace
+/.templateengine/
+
