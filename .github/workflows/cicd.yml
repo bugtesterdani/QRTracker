@@ -24,6 +24,9 @@ jobs:
         uses: actions/dependency-review-action@v4
 
   security-scans:
+    permissions:
+      contents: read
+      security-events: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
