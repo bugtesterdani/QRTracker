@@ -78,6 +78,7 @@ Diese Projektmappe enthält eine .NET MAUI-Anwendung, die auf Android, iOS und W
 - Läuft auf Push nach `main`, auf Tags `v*` und manuell via `workflow_dispatch`.
 - Schritte
   - `dotnet list package` für Vulnerability- und Deprecated-Checks
+  - `dotnet audit` (NuGet Security Audit, zusätzliche Schwachstellenerkennung)
   - Lizenzprüfung mit Abbruch bei `GPL/AGPL/LGPL/UNKNOWN`
   - Secret-Scan via `gitleaks`
   - Release-Build (`dotnet publish`, self-contained, Single-File)
