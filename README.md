@@ -76,12 +76,15 @@ Diese Projektmappe enthält eine .NET MAUI-Anwendung, die auf Android, iOS und W
 
 - GitHub Actions Workflow: `.github/workflows/cicd.yml`
 - Läuft auf Push nach `main`, auf Tags `v*` und manuell via `workflow_dispatch`.
-- Schritte
-  - `dotnet list package` für Vulnerability- und Deprecated-Checks
-  - `dotnet audit` (NuGet Security Audit, zusätzliche Schwachstellenerkennung)
+- Sicherheits- und Lizenzprüfungen
+  - `dotnet list package` (vulnerable/deprecated) & `dotnet audit`
+  - Trivy Filesystem-Scan (CRITICAL/HIGH, Sarif → Code Scanning)
+  - Semgrep SAST (`p/ci` Regelset, Sarif → Code Scanning)
+  - CodeQL für C# (Security Events)
+  - GitHub Dependency Review (nur Pull Requests)
   - Lizenzprüfung mit Abbruch bei `GPL/AGPL/LGPL/UNKNOWN`
   - Secret-Scan via `gitleaks`
+- Build & Release
   - Release-Build (`dotnet publish`, self-contained, Single-File)
-- Artefakte
-  - GitHub Action lädt `QRTracker.exe` als Build-Artefakt hoch
-  - Bei Tags (`v*`) wird automatisch ein Release mit der `.exe` erstellt (Dateiname enthält den Tag)
+  - Artefakt `QRTracker.exe` wird hochgeladen
+  - Bei Tags (`v*`) entsteht automatisch ein Release mit dem umbenannten Binary
