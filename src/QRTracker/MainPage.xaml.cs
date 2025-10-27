@@ -1,6 +1,9 @@
 using QRTracker.Models;
 using QRTracker.Services;
 using QRTracker.Helpers;
+#if ANDROID || IOS || MACCATALYST
+using ZXing.Net.Maui.Controls;
+#endif
 
 namespace QRTracker;
 
@@ -52,10 +55,10 @@ public partial class MainPage : ContentPage
             AuthStatus.Text = "Login optional";
         }
 
-#if ANDROID || IOS
+#if ANDROID || IOS || MACCATALYST
         try
         {
-            var cam = new ZXing.Net.Maui.CameraBarcodeReaderView
+            var cam = new CameraBarcodeReaderView
             {
                 IsDetecting = true,
                 HorizontalOptions = LayoutOptions.Fill,
