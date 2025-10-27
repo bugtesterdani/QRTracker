@@ -77,7 +77,7 @@ Diese Projektmappe enthält eine .NET MAUI-Anwendung, die auf Android, iOS und W
 - GitHub Actions Workflow: `.github/workflows/cicd.yml`
 - Läuft auf Push nach `main`, auf Tags `v*` und manuell via `workflow_dispatch`.
 - Sicherheits- und Lizenzprüfungen
-  - `dotnet list package` (vulnerable/deprecated) & `dotnet audit`
+  - `dotnet list package` (vulnerable/deprecated) & `dotnet nuget audit`
   - Trivy Filesystem-Scan (CRITICAL/HIGH, Sarif → Code Scanning)
   - Semgrep SAST (`p/ci` Regelset, Sarif → Code Scanning)
   - CodeQL für C# (Security Events)

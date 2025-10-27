@@ -154,16 +154,8 @@ jobs:
       - name: Vulnerability scan (dotnet list package)
         run: dotnet list src/QRTracker/QRTracker.csproj package --vulnerable --include-transitive
 
-      - name: Install dotnet-audit tool
-        shell: pwsh
-        run: |
-          dotnet tool update --global dotnet-audit --no-cache || dotnet tool install --global dotnet-audit
-
-      - name: Vulnerability audit (dotnet audit)
-        shell: pwsh
-        run: |
-          $env:PATH += ';' + (Join-Path $env:USERPROFILE '.dotnet\tools')
-          dotnet audit src/QRTracker/QRTracker.csproj --framework net9.0-windows10.0.19041.0 --ignore-failed-sources
+      - name: Vulnerability audit (dotnet nuget audit)
+        run: dotnet nuget audit src/QRTracker/QRTracker.csproj --include-transitive --ignore-failed-sources
 
       - name: Deprecated package scan
         run: dotnet list src/QRTracker/QRTracker.csproj package --deprecated
