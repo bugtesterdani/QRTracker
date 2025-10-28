@@ -173,10 +173,93 @@ jobs:
       - name: License compliance check
         shell: pwsh
         run: |
-          dotnet list src/QRTracker/QRTracker.csproj package --include-transitive --license > licenses.txt
-          Get-Content licenses.txt
-          if (Select-String -Path licenses.txt -Pattern 'AGPL|GPL|LGPL|UNKNOWN|UNLICENSED') {
-            Write-Error 'Disallowed or unknown licenses detected.'
+          $projectPath = 'src/QRTracker/QRTracker.csproj'
+          $licenseJsonPath = Join-Path $PWD 'license-inventory.json'
+          dotnet list $projectPath package --include-transitive --format json |
+            Tee-Object -FilePath $licenseJsonPath | Out-Null
+
+          $inventory = Get-Content $licenseJsonPath -Raw | ConvertFrom-Json
+          if (-not $inventory.projects) {
+            throw 'Unable to parse project dependency inventory from dotnet list output.'
+          }
+          $globalPackages = dotnet nuget locals global-packages --list |
+            Select-String 'global-packages' | ForEach-Object {
+              ($_ -split ':', 2)[1].Trim()
+            } | Select-Object -First 1
+
+          if (-not $globalPackages) {
+            throw 'Unable to determine the global packages folder from dotnet nuget locals.'
+          }
+
+          $packages = @()
+          foreach ($project in $inventory.projects) {
+            foreach ($framework in $project.frameworks) {
+              if ($framework.topLevelPackages) {
+                $packages += $framework.topLevelPackages
+              }
+              if ($framework.transitivePackages) {
+                $packages += $framework.transitivePackages
+              }
+            }
+          }
+
+          $packages = $packages | Where-Object { $_ } | ForEach-Object {
+              [PSCustomObject]@{
+                Id = $_.id
+                Version = $_.resolvedVersion
+              }
+            } | Sort-Object Id, Version -Unique
+
+          $reportLines = @()
+          $violations = @()
+          foreach ($pkg in $packages) {
+            $id = $pkg.Id
+            $version = $pkg.Version
+            $packageFolder = Join-Path $globalPackages ($id.ToLower())
+            $nuspecPath = Join-Path (Join-Path $packageFolder $version) "${($id.ToLower())}.nuspec"
+
+            if (-not (Test-Path $nuspecPath)) {
+              $line = "$id@$version - license metadata unavailable"
+              $reportLines += $line
+              $violations += $line
+              continue
+            }
+
+            [xml]$nuspec = Get-Content $nuspecPath
+            $licenseNode = $nuspec.package.metadata.license
+            $licenseValue = $null
+            if ($licenseNode) {
+              $licenseValue = $licenseNode.InnerText
+            }
+
+            if (-not $licenseValue) {
+              $licenseUrlNode = $nuspec.package.metadata.licenseUrl
+              if ($licenseUrlNode -and $licenseUrlNode.InnerText) {
+                $licenseValue = $licenseUrlNode.InnerText
+              } elseif ($licenseUrlNode) {
+                $licenseValue = $licenseUrlNode
+              }
+            }
+
+            if (-not $licenseValue) {
+              $licenseValue = 'UNKNOWN'
+            }
+
+            $line = "$id@$version - $licenseValue"
+            $reportLines += $line
+
+            if ($licenseValue -match '(AGPL|GPL|LGPL|UNKNOWN|UNLICENSED)') {
+              $violations += $line
+            }
+          }
+
+          $reportPath = Join-Path $PWD 'licenses.txt'
+          $reportLines | Set-Content -Path $reportPath -Encoding UTF8
+          Get-Content $reportPath
+          Remove-Item $licenseJsonPath -ErrorAction SilentlyContinue
+
+          if ($violations.Count -gt 0) {
+            Write-Error "Disallowed or unknown licenses detected.`n$($violations -join [Environment]::NewLine)"
             exit 1
           }
         working-directory: ${{ github.workspace }}
@@ -228,8 +311,16 @@ jobs:
           path: dist
 
       - name: Rename binary with tag
+        shell: bash
         run: |
-          mv dist/QRTracker.exe dist/QRTracker-${{ github.ref_name }}.exe
+          set -euo pipefail
+          binary_path="dist/artifacts/win-x64/QRTracker.exe"
+          if [ ! -f "$binary_path" ]; then
+            echo "Expected binary not found at $binary_path after downloading artifacts" >&2
+            find dist -maxdepth 3 -type f >&2 || true
+            exit 1
+          fi
+          mv "$binary_path" "dist/QRTracker-${{ github.ref_name }}.exe"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
