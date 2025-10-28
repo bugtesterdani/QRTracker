@@ -2,4 +2,5 @@ version: 1
 package-ecosystems:
   - package-ecosystem: nuget
     directory: "/"
-    runs-on: windows-latest
+    runs-on:
+      - windows-latest
