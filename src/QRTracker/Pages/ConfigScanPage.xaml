@@ -4,6 +4,7 @@
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:zcore="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
              x:Class="QRTracker.Pages.ConfigScanPage"
+             AutomationProperties.AutomationId="ConfigScanPage"
              Title="Konfiguration scannen">
     <Grid RowDefinitions="*,Auto" ColumnDefinitions="*" BackgroundColor="Black">
         <zxing:CameraBarcodeReaderView x:Name="CameraView"
@@ -21,7 +22,9 @@
             <Label x:Name="InstructionLabel" TextColor="White"
                    Text="Scannen Sie den QR-Code aus den Einstellungen." />
             <Label x:Name="StatusLabel" TextColor="LightGray" />
-            <Button Text="Abbrechen" Clicked="OnCancel" />
+            <Button Text="Abbrechen"
+                    AutomationProperties.AutomationId="ConfigScanCancelButton"
+                    Clicked="OnCancel" />
         </StackLayout>
     </Grid>
 </ContentPage>

@@ -2,29 +2,50 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="QRTracker.MainPage"
-             Title="Scannen">
+             Title="Scannen"
+             AutomationProperties.AutomationId="MainPage">
     <Grid RowDefinitions="Auto,*,Auto" Padding="12">
         <VerticalStackLayout Grid.Row="0" Spacing="6">
-            <Label x:Name="AuthStatus" />
-            <Button Text="Login" Clicked="OnLoginClicked" />
+            <Label x:Name="AuthStatus"
+                   AutomationProperties.AutomationId="AuthStatusLabel" />
+            <Button Text="Login"
+                    AutomationProperties.AutomationId="LoginButton"
+                    Clicked="OnLoginClicked" />
         </VerticalStackLayout>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Spacing="8">
                 <Label Text="Station (S...)" />
-                <Entry x:Name="StationEntry" Placeholder="Station QR oder Code" IsEnabled="False" />
+                <Entry x:Name="StationEntry"
+                       AutomationProperties.AutomationId="StationEntry"
+                       Placeholder="Station QR oder Code"
+                       IsEnabled="False" />
                 <Label Text="Geraet (G...)" />
-                <Entry x:Name="DeviceEntry" Placeholder="Geraete QR oder Code" IsEnabled="False" />
-                <Button x:Name="StartButton" Text="Start" Clicked="OnStart" IsEnabled="False" />
-                <Label x:Name="TimerLabel" FontSize="18" Text="Laufzeit: -" />
-                <Button x:Name="StopButton" Text="Stopp (erneut G scannen)" Clicked="OnStopManual" IsEnabled="False" />
+                <Entry x:Name="DeviceEntry"
+                       AutomationProperties.AutomationId="DeviceEntry"
+                       Placeholder="Geraete QR oder Code"
+                       IsEnabled="False" />
+                <Button x:Name="StartButton"
+                        AutomationProperties.AutomationId="StartButton"
+                        Text="Start"
+                        Clicked="OnStart"
+                        IsEnabled="False" />
+                <Label x:Name="TimerLabel"
+                       AutomationProperties.AutomationId="TimerLabel"
+                       FontSize="18"
+                       Text="Laufzeit: -" />
+                <Button x:Name="StopButton"
+                        AutomationProperties.AutomationId="StopButton"
+                        Text="Stopp (erneut G scannen)"
+                        Clicked="OnStopManual"
+                        IsEnabled="False" />
 
                 <Label Text="QR-Scanner (mobil)" />
-                <StackLayout x:Name="MobileScanHost" />
+                <StackLayout x:Name="MobileScanHost"
+                             AutomationProperties.AutomationId="MobileScanHost" />
             </VerticalStackLayout>
         </ScrollView>
 
         <Label Grid.Row="2" Text="Tipps: Station S..., Geraet G...; G erneut zum Stop." />
     </Grid>
 </ContentPage>
-

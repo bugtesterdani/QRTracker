@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using QRTracker.Services;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
+using CommunityToolkit.Maui;
 
 namespace QRTracker;
 
@@ -12,6 +13,8 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
+            .UseBarcodeReader()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

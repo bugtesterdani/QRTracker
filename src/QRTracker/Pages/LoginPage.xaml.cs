@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using Microsoft.Maui.Devices;
 using QRTracker.Helpers;
 using QRTracker.Models;
 using QRTracker.Services;
@@ -114,8 +115,21 @@ public partial class LoginPage : ContentPage
         if (_isProcessing)
             return;
 
-        var scanPage = new ConfigScanPage(ApplyConfigurationAsync);
-        await Navigation.PushModalAsync(scanPage);
+        _isProcessing = true;
+
+        try
+        {
+            var scanPage = new ConfigScanPage(ApplyConfigurationAsync);
+            await Navigation.PushModalAsync(scanPage);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Fehler", $"QR-Scan konnte nicht gestartet werden: {ex.Message}", "OK");
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
     }
 
     private async Task ApplyConfigurationAsync(ConfigurationPayload payload)
@@ -134,6 +148,15 @@ public partial class LoginPage : ContentPage
     }
 
     protected override bool OnBackButtonPressed() => true;
+
+    private static bool IsScanSupportedOnCurrentPlatform()
+    {
+        var platform = DeviceInfo.Current.Platform;
+        return platform == DevicePlatform.Android ||
+               platform == DevicePlatform.iOS ||
+               platform == DevicePlatform.MacCatalyst ||
+               platform == DevicePlatform.WinUI;
+    }
 }
 
 

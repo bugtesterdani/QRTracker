@@ -39,7 +39,7 @@ public partial class MainPage : ContentPage
 	{
 		base.OnAppearing();
 
-		if (!_authService.IsAuthenticated)
+        if (!_authService.IsAuthenticated)
 		{
 			await ShowLoginModalAsync();
 		}
