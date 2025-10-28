@@ -1,4 +1,4 @@
-name: Dependabot: Validate .NET changes (custom)
+name: Dependabot Validate .NET changes (custom)
 
 on:
   pull_request:
