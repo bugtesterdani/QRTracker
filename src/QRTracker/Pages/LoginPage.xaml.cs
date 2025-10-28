@@ -1,34 +1,36 @@
 using System.Net.Mail;
-using QRTracker.Services;
 using QRTracker.Helpers;
+using QRTracker.Models;
+using QRTracker.Services;
 
 namespace QRTracker.Pages;
 
 public partial class LoginPage : ContentPage
 {
     private readonly AuthService _auth;
-    private readonly SettingsService _settings;
-    private readonly SharePointService _sp;
-    private bool _isProcessing;
+    private readonly SettingsService _settingsService;
+    private readonly SharePointService _sharePoint;
     private readonly Func<Task>? _requestSettingsCallback;
+
+    private bool _isProcessing;
 
     public LoginPage(Func<Task>? requestSettingsCallback = null)
     {
         InitializeComponent();
         _requestSettingsCallback = requestSettingsCallback;
         _auth = ServiceHelper.GetRequiredService<AuthService>();
-        _settings = ServiceHelper.GetRequiredService<SettingsService>();
-        _sp = ServiceHelper.GetRequiredService<SharePointService>();
+        _settingsService = ServiceHelper.GetRequiredService<SettingsService>();
+        _sharePoint = ServiceHelper.GetRequiredService<SharePointService>();
         _ = InitAsync();
     }
 
     private async Task InitAsync()
     {
-        var s = await _settings.LoadAsync();
-        await _auth.InitializeAsync(s);
-        if (!string.IsNullOrWhiteSpace(s.UserEmail))
+        var settings = await _settingsService.LoadAsync();
+        await _auth.InitializeAsync(settings);
+        if (!string.IsNullOrWhiteSpace(settings.UserEmail))
         {
-            EmailEntry.Text = s.UserEmail;
+            EmailEntry.Text = settings.UserEmail;
         }
     }
 
@@ -42,11 +44,17 @@ public partial class LoginPage : ContentPage
 
         try
         {
-            var settings = await _settings.LoadAsync();
-            var rawEmail = EmailEntry.Text?.Trim() ?? string.Empty;
+            var settings = await _settingsService.LoadAsync();
+
+            var rawEmail = EmailEntry.Text?.Trim();
             if (string.IsNullOrWhiteSpace(rawEmail))
             {
-                await DisplayAlert("Hinweis", "Bitte eine gültige Firmen-E-Mail-Adresse angeben.", "OK");
+                rawEmail = settings.UserEmail;
+            }
+
+            if (string.IsNullOrWhiteSpace(rawEmail))
+            {
+                await DisplayAlert("Hinweis", "Bitte eine gueltige Firmen-E-Mail-Adresse angeben.", "OK");
                 return;
             }
 
@@ -57,7 +65,7 @@ public partial class LoginPage : ContentPage
             }
             catch
             {
-                await DisplayAlert("Hinweis", "Bitte eine gültige Firmen-E-Mail-Adresse angeben.", "OK");
+                await DisplayAlert("Hinweis", "Bitte eine gueltige Firmen-E-Mail-Adresse angeben.", "OK");
                 return;
             }
 
@@ -71,7 +79,7 @@ public partial class LoginPage : ContentPage
                 }
                 else
                 {
-                    await DisplayAlert("Konfiguration erforderlich", "Für diese Domäne ist noch keine Zuordnung hinterlegt. Bitte wende dich an die IT oder trage die Daten in den Einstellungen ein.", "OK");
+                    await DisplayAlert("Konfiguration erforderlich", "Fuer diese Domain ist noch keine Zuordnung hinterlegt. Bitte IT informieren oder Werte in den Einstellungen eintragen.", "OK");
                     if (_requestSettingsCallback is not null)
                     {
                         await _requestSettingsCallback();
@@ -80,18 +88,18 @@ public partial class LoginPage : ContentPage
                 }
             }
 
-            await _settings.SaveAsync(settings);
+            await _settingsService.SaveAsync(settings);
             await _auth.InitializeAsync(settings);
 
-            var res = await _auth.InteractiveAsync();
-            if (res.Success)
+            var result = await _auth.InteractiveAsync();
+            if (result.Success)
             {
-                _sp.Configure(settings, res.AccessToken);
-                await DisplayAlert("Erfolg", $"Angemeldet: {res.AccountUpn}", "OK");
+                _sharePoint.Configure(settings, result.AccessToken);
+                await DisplayAlert("Erfolg", $"Angemeldet: {result.AccountUpn}", "OK");
             }
             else
             {
-                await DisplayAlert("Fehler", res.Error ?? "Unbekannt", "OK");
+                await DisplayAlert("Fehler", result.Error ?? "Unbekannter Fehler", "OK");
             }
         }
         finally
@@ -101,5 +109,33 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    private async void OnScan(object? sender, EventArgs e)
+    {
+        if (_isProcessing)
+            return;
+
+        var scanPage = new ConfigScanPage(ApplyConfigurationAsync);
+        await Navigation.PushModalAsync(scanPage);
+    }
+
+    private async Task ApplyConfigurationAsync(ConfigurationPayload payload)
+    {
+        var settings = await _settingsService.LoadAsync();
+        payload.Apply(settings);
+        await _settingsService.SaveAsync(settings);
+        await _auth.InitializeAsync(settings);
+
+        if (!string.IsNullOrWhiteSpace(settings.UserEmail))
+        {
+            EmailEntry.Text = settings.UserEmail;
+        }
+
+        await DisplayAlert("Konfiguration", "Einstellungen aus dem QR-Code wurden uebernommen. Bitte melden Sie sich an.", "OK");
+    }
+
     protected override bool OnBackButtonPressed() => true;
 }
+
+
+
+

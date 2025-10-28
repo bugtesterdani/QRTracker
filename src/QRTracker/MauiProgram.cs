@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using QRTracker.Services;
+using ZXing.Net.Maui;
+using ZXing.Net.Maui.Controls;
 
 namespace QRTracker;
 
@@ -14,6 +16,11 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+            })
+            .ConfigureMauiHandlers(handlers =>
+            {
+                handlers.AddHandler<CameraBarcodeReaderView, CameraBarcodeReaderViewHandler>();
+                handlers.AddHandler<BarcodeGeneratorView, BarcodeGeneratorViewHandler>();
             });
 
 #if DEBUG

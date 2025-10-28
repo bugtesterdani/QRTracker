@@ -2,9 +2,8 @@ using QRTracker.Models;
 using QRTracker.Pages;
 using QRTracker.Services;
 using QRTracker.Helpers;
-#if ANDROID || IOS || MACCATALYST
+using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
-#endif
 
 namespace QRTracker;
 
@@ -82,6 +81,7 @@ public partial class MainPage : ContentPage
                 HorizontalOptions = LayoutOptions.Fill,
                 VerticalOptions = LayoutOptions.Fill
             };
+            ConfigureCameraOptions(cam);
             cam.BarcodesDetected += OnBarcodeDetected;
             MobileScanHost.Children.Clear();
             MobileScanHost.Children.Add(cam);
@@ -210,7 +210,7 @@ public partial class MainPage : ContentPage
             catch { }
         }
 
-        await DisplayAlert("Erfasst", uploaded ? "Lokal gespeichert und hochgeladen." : "Lokal gespeichert (Upload spaeter möglich).", "OK");
+		await DisplayAlert("Erfasst", uploaded ? "Lokal gespeichert und hochgeladen." : "Lokal gespeichert (Upload spaeter moeglich).", "OK");
 
         _startUtc = null;
         _station = null;
@@ -262,22 +262,32 @@ public partial class MainPage : ContentPage
         }
     }
 
-	private async Task RunOnUiThreadAsync(Func<Task> action)
-	{
-		if (Dispatcher.IsDispatchRequired)
-		{
-			await Dispatcher.DispatchAsync(action);
-		}
-		else
-		{
-			await action();
-		}
-	}
+    private async Task RunOnUiThreadAsync(Func<Task> action)
+    {
+        if (Dispatcher.IsDispatchRequired)
+        {
+            await Dispatcher.DispatchAsync(action);
+        }
+        else
+        {
+            await action();
+        }
+    }
 
-	private async Task ShowLoginModalAsync()
-	{
-		if (_authService.IsAuthenticated)
-			return;
+    private static void ConfigureCameraOptions(CameraBarcodeReaderView view)
+    {
+        view.Options = new BarcodeReaderOptions
+        {
+            AutoRotate = true,
+            Multiple = false,
+            Formats = BarcodeFormat.QrCode | BarcodeFormat.Code128 | BarcodeFormat.Code39 | BarcodeFormat.Codabar
+        };
+    }
+
+    private async Task ShowLoginModalAsync()
+    {
+        if (_authService.IsAuthenticated)
+            return;
 
 		if (_isLoginModalOpen)
 			return;
@@ -318,6 +328,7 @@ public partial class MainPage : ContentPage
 		}
 	}
 }
+
 
 
 

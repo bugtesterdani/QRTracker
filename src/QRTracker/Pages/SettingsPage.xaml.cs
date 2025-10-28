@@ -1,3 +1,4 @@
+using System.Text.Json;
 using QRTracker.Models;
 using QRTracker.Services;
 using QRTracker.Helpers;
@@ -8,6 +9,11 @@ public partial class SettingsPage : ContentPage
 {
     private readonly SettingsService _settingsService;
     private AppSettings _settings = new();
+    private bool _detailsVisible;
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = false
+    };
 
     public SettingsPage()
     {
@@ -29,6 +35,8 @@ public partial class SettingsPage : ContentPage
         DriveIdEntry.Text = _settings.DriveId;
         ItemIdEntry.Text = _settings.ItemId;
         TableNameEntry.Text = _settings.TableName;
+        SetDetailsVisibility(false);
+        UpdateQrCode();
     }
 
     private async void OnSaveClicked(object? sender, EventArgs e)
@@ -44,6 +52,37 @@ public partial class SettingsPage : ContentPage
         _settings.ItemId = ItemIdEntry.Text?.Trim();
         _settings.TableName = string.IsNullOrWhiteSpace(TableNameEntry.Text) ? _settings.TableName : TableNameEntry.Text!.Trim();
         await _settingsService.SaveAsync(_settings);
+        UpdateQrCode();
         await DisplayAlert("Gespeichert", "Einstellungen gespeichert.", "OK");
+    }
+
+    private void UpdateQrCode()
+    {
+        var payload = ConfigurationPayload.FromSettings(_settings);
+        var json = JsonSerializer.Serialize(payload, _jsonOptions);
+        if (string.IsNullOrWhiteSpace(payload.ClientId) || string.IsNullOrWhiteSpace(payload.TenantId))
+        {
+            ConfigQr.Value = string.Empty;
+            QrStatusLabel.Text = "Konfiguration unvollständig. Bitte Details ausfüllen.";
+        }
+        else
+        {
+            ConfigQr.Value = json;
+            QrStatusLabel.Text = string.IsNullOrWhiteSpace(_settings.UserEmail)
+                ? "Konfiguration bereit."
+                : $"Konfiguration für {_settings.UserEmail}";
+        }
+    }
+
+    private void OnToggleDetails(object? sender, EventArgs e)
+    {
+        SetDetailsVisibility(!_detailsVisible);
+    }
+
+    private void SetDetailsVisibility(bool visible)
+    {
+        _detailsVisible = visible;
+        DetailsContainer.IsVisible = visible;
+        ToggleDetailsButton.Text = visible ? "Details ausblenden" : "Details anzeigen";
     }
 }

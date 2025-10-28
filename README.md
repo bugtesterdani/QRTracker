@@ -44,15 +44,15 @@ Cross-platform .NET MAUI App (Android, iOS, Windows)
 
 - Zuordnungstabelle in `src/QRTracker/Services/TenantConfigProvider.cs`
 - Beispiel `example.com` durch echte Firmen-Domains plus TenantId/ClientId/SiteId/DriveId/ItemId/TableName ersetzen
-- Nutzer geben nur ihre Firmenadresse ein; notwendige Einstellungen werden gefüllt
-- Falls keine Zuordnung existiert, öffnet die App automatisch den Einstellungs-Tab zur manuellen Eingabe
+- Nutzer geben nur ihre Firmenadresse ein; notwendige Einstellungen werden gefuellt
+- Falls keine Zuordnung existiert, oeffnet die App automatisch den Einstellungs-Tab zur manuellen Eingabe
 
 ### SharePoint/Excel Upload (Graph)
 
 - Standard-Scopes: `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `offline_access`
 - App-Registrierung in Entra ID (Azure AD) notwendig
   - Redirect URIs konfigurieren (`msal{ClientId}://auth` auf Mobile, Systembrowser auf Windows)
-  - Delegierte Graph-Berechtigungen hinzufügen
+  - Delegierte Graph-Berechtigungen hinzufuegen
 - Tabelle/Datei muss existieren (TableName default `Table1`)
 
 ### QR-Scanner auf Mobile
@@ -79,8 +79,20 @@ Cross-platform .NET MAUI App (Android, iOS, Windows)
 2. App-Registrierung in Entra ID anlegen (Public Client) und Werte eintragen
 3. Nutzer starten App, geben Firmen-E-Mail ein und melden sich an
 4. Optional: SharePoint IDs im Mapping pflegen (SiteId, DriveId, ItemId, TableName)
+5. QR-Code in den Einstellungen betrachten und scannen, um Konfigurationen zwischen Geraeten zu teilen
+6. Alternativ beim Login den Button "QR-Code scannen" nutzen, um Einstellungen einzulesen
+5. Nutzer koennen den QR-Code (Einstellungen-Tab) scannen, um Konfigurationen zwischen Geraeten zu uebertragen
+6. Alternativ QR-Code beim Login scannen (Button "QR-Code scannen")
 
 ## Bekannte Hinweise
 
 - XAML-Compiler warnt fuer Historien-View (fehlendes `x:DataType`); funktional unkritisch
-- Bei fehlender Domain-Zuordnung wird der Tab "Einstellungen" geoeffnet, damit Werte manuell ergänzt werden können
+- Bei fehlender Domain-Zuordnung wird der Tab "Einstellungen" geoeffnet, damit Werte manuell ergaenzt werden koennen
+
+
+
+## Weitere Informationen
+
+- Ausfuehrliche Schritt-fuer-Schritt-Anleitung zur App-Registrierung: [docs/azure-setup.md](docs/azure-setup.md)
+
+

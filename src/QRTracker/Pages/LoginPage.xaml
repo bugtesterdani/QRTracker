@@ -7,5 +7,6 @@
         <Label Text="Bitte geben Sie Ihre Firmen-E-Mail-Adresse ein und melden Sie sich anschließend an." />
         <Entry x:Name="EmailEntry" Placeholder="name@firma.de" Keyboard="Email" />
         <Button x:Name="LoginActionButton" Text="Jetzt anmelden" Clicked="OnLogin" />
+        <Button Text="QR-Code scannen" Clicked="OnScan" />
     </VerticalStackLayout>
 </ContentPage>
