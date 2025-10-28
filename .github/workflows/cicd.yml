@@ -231,9 +231,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          binary_path=$(find dist -type f -name 'QRTracker.exe' -print -quit)
-          if [ -z "$binary_path" ]; then
-            echo "QRTracker.exe not found in downloaded artifacts" >&2
+          binary_path="dist/artifacts/win-x64/QRTracker.exe"
+          if [ ! -f "$binary_path" ]; then
+            echo "Expected binary not found at $binary_path" >&2
             exit 1
           fi
           mv "$binary_path" "dist/QRTracker-${{ github.ref_name }}.exe"
