@@ -228,8 +228,15 @@ jobs:
           path: dist
 
       - name: Rename binary with tag
+        shell: bash
         run: |
-          mv dist/artifacts/win-x64/QRTracker.exe dist/QRTracker-${{ github.ref_name }}.exe
+          set -euo pipefail
+          binary_path=$(find dist -type f -name 'QRTracker.exe' -print -quit)
+          if [ -z "$binary_path" ]; then
+            echo "QRTracker.exe not found in downloaded artifacts" >&2
+            exit 1
+          fi
+          mv "$binary_path" "dist/QRTracker-${{ github.ref_name }}.exe"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
