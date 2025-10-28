@@ -229,7 +229,7 @@ jobs:
 
       - name: Rename binary with tag
         run: |
-          mv dist/QRTracker.exe dist/QRTracker-${{ github.ref_name }}.exe
+          mv dist/artifacts/win-x64/QRTracker.exe dist/QRTracker-${{ github.ref_name }}.exe
 
       - name: Create release
         uses: softprops/action-gh-release@v2
