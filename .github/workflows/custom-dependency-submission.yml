@@ -1,0 +1,47 @@
+name: Dependabot: Validate .NET changes (custom)
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  workflow_dispatch: {}
+
+concurrency:
+  group: dependabot-validate
+  cancel-in-progress: true
+
+jobs:
+  validate-dependabot:
+    # Nur ausführen für Dependabot-PRs (sichert, dass andere PRs nicht betroffen sind)
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln', '**/packages.lock.json', '**/packages.config') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'   # Du hast .NET 9 angegeben
+
+      - name: Restore .NET workloads
+        run: |
+          echo "Restoring workloads required by the repo"
+          dotnet workload restore --ignore-failed-sources
+
+      - name: Restore solution
+        run: dotnet restore ./QRTracker.sln
+
+      - name: Build solution (no-restore)
+        run: dotnet build ./QRTracker.sln --configuration Release --no-restore
+
+      # Optional: Tests ausführen (falls keine UI-Only Tests)
+      # - name: Run tests
+      #   run: dotnet test ./tests/QRTracker.UITests/QRTracker.UITests.csproj --no-build --verbosity normal
